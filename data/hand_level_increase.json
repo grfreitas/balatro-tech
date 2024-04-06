@@ -1,0 +1,50 @@
+{
+    "high_card": {
+        "mult": "1",
+        "chips": "10"
+    },
+    "pair": {
+        "mult": "1",
+        "chips": "15"
+    },
+    "two_pair": {
+        "mult": "1",
+        "chips": "20"
+    },
+    "flush": {
+        "mult": "2",
+        "chips": "15"
+    },
+    "three_of_a_kind": {
+        "mult": "2",
+        "chips": "20"
+    },
+    "full_house": {
+        "mult": "2",
+        "chips": "25"
+    },
+    "straight": {
+        "mult": "2",
+        "chips": "30"
+    },
+    "four_of_a_kind": {
+        "mult": "3",
+        "chips": "30"
+    },
+    "straight_flush": {
+        "mult": "3",
+        "chips": "40"
+    },
+    "five_of_a_kind": {
+        "mult": "3",
+        "chips": "35"
+    },
+    "flush_house": {
+        "mult": "3",
+        "chips": "40"
+    },
+    "flush_five": {
+        "mult": "3",
+        "chips": "40"
+    }
+}
