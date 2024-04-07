@@ -67,23 +67,19 @@ class Hand():
 
         if (value_count_list >= n).any():
             pair_chips = []
-            pair_values = value_count_list[value_count_list >= n].index
-    
-            for value in pair_values:
-                if value_count_list[value] == n:
-                    total_chips = self.cards[self.cards.value == value].base_chip_value.sum()
-                    pair_chips.append(total_chips)
-                else:
-                    # TODO: There can be a pair inside a hand with 3 cards of the same value.
-                    # Since there are cards that may be modified, the pairs may amount different values.
-                    # The code needs to permutate over the pairs and return the index of the best.
-                    total_chips = self.cards[self.cards.value == value][:n].base_chip_value.sum()
-                    pair_chips.append(total_chips)
-
-            max_pair_value = pair_values[pair_chips.index(max(pair_chips))]
-            return self.cards[self.cards.value == max_pair_value]
+            elegible_values = value_count_list[value_count_list >= n].index
         else:
-            return self._empty_df
+            return
+
+        elegible = self.cards[self.cards.value.isin(elegible_values)].sort_values(
+            ['value', 'base_chip_value'],
+            ascending=[False, False]
+        ).groupby('value').head(n)
+
+        totals = elegible.groupby('value').base_chip_value.sum()
+        best_totals = totals.sort_values(ascending=False).drop_duplicates()
+
+        return elegible[elegible.value.isin(best_totals[:1].index)]
 
     def draw_from_deck(self, deck, n=7):
         self.cards = pd.concat([self.cards, deck.cards[:n]])
@@ -129,7 +125,15 @@ class Hand():
             return
 
     def find_best_full_house_hand(self):
-        pass
+        temp_hand = self.cards
+    
+        best_three = self.find_best_three_of_a_kind_hand()
+        self.cards = self.cards.drop(best_three.index)
+        best_pair = self.find_best_pair_hand()
+
+        self.cards = temp_hand
+
+        return pd.concat([best_pair, best_three])
 
     def find_best_flush_hand(self):
         pass
