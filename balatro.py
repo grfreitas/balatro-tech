@@ -62,20 +62,13 @@ class Hand():
     def __repr__(self):
         return self.cards.to_markdown()
 
-    def draw_from_deck(self, deck, n=7):
-        self.cards = deck.cards[:n].reset_index(drop=True).copy()
-        deck.cards = deck.cards[n:].copy()
-
-    def find_best_high_card_hand(self):
-        max_chip_value = self.cards.base_chip_value.max()
-        return self.cards[self.cards.base_chip_value == max_chip_value]
-
     def _find_best_n_hand(self, n):
         value_count_list = self.cards.value.value_counts()
 
         if (value_count_list >= n).any():
             pair_chips = []
             pair_values = value_count_list[value_count_list >= n].index
+    
             for value in pair_values:
                 if value_count_list[value] == n:
                     total_chips = self.cards[self.cards.value == value].base_chip_value.sum()
@@ -92,6 +85,14 @@ class Hand():
         else:
             return self._empty_df
 
+    def draw_from_deck(self, deck, n=7):
+        self.cards = pd.concat([self.cards, deck.cards[:n]])
+        deck.cards = deck.cards[n:].copy()
+
+    def find_best_high_card_hand(self):
+        max_chip_value = self.cards.base_chip_value.max()
+        return self.cards[self.cards.base_chip_value == max_chip_value]
+
     def find_best_pair_hand(self):
         return self._find_best_n_hand(2)
 
@@ -105,7 +106,27 @@ class Hand():
         return self._find_best_n_hand(5)
 
     def find_best_two_pair_hand(self):
-        pass
+        value_count_list = self.cards.value.value_counts()
+
+        if (value_count_list >= 2).any():
+            pair_chips = []
+            elegible_pairs = value_count_list[value_count_list >= 2].index
+        else:
+            return
+
+        if len(elegible_pairs) >= 2:
+            elegible = self.cards[self.cards.value.isin(elegible_pairs)].sort_values(
+                ['value', 'base_chip_value'],
+                ascending=[False, False]
+            ).groupby('value').head(2)
+
+            pair_totals = elegible.groupby('value').base_chip_value.sum()
+            best_totals = pair_totals.sort_values(ascending=False).drop_duplicates()
+            best_two_pair_values = best_totals.head(2).index
+
+            return elegible[elegible.value.isin(best_two_pair_values)]
+        else:
+            return
 
     def find_best_full_house_hand(self):
         pass
@@ -127,4 +148,3 @@ class Hand():
 
     def find_best_poker_hand(self):
         pass
-    
