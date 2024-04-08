@@ -62,24 +62,23 @@ class Hand():
     def __repr__(self):
         return self.cards.to_markdown()
 
-    def _find_best_n_hand(self, n):
-        value_count_list = self.cards.value.value_counts()
+    def _find_best_n_hand(self, n, feat='value'):
+        count_list = self.cards[feat].value_counts()
 
-        if (value_count_list >= n).any():
-            pair_chips = []
-            elegible_values = value_count_list[value_count_list >= n].index
+        if (count_list >= n).any():
+            elegible_values = count_list[count_list >= n].index
         else:
             return
 
-        elegible = self.cards[self.cards.value.isin(elegible_values)].sort_values(
-            ['value', 'base_chip_value'],
+        elegible = self.cards[self.cards[feat].isin(elegible_values)].sort_values(
+            [feat, 'base_chip_value'],
             ascending=[False, False]
-        ).groupby('value').head(n)
+        ).groupby(feat).head(n)
 
-        totals = elegible.groupby('value').base_chip_value.sum()
+        totals = elegible.groupby(feat).base_chip_value.sum()
         best_totals = totals.sort_values(ascending=False).drop_duplicates()
 
-        return elegible[elegible.value.isin(best_totals[:1].index)]
+        return elegible[elegible[feat].isin(best_totals[:1].index)]
 
     def draw_from_deck(self, deck, n=7):
         self.cards = pd.concat([self.cards, deck.cards[:n]])
@@ -105,7 +104,6 @@ class Hand():
         value_count_list = self.cards.value.value_counts()
 
         if (value_count_list >= 2).any():
-            pair_chips = []
             elegible_pairs = value_count_list[value_count_list >= 2].index
         else:
             return
@@ -125,30 +123,39 @@ class Hand():
             return
 
     def find_best_full_house_hand(self):
-        temp_hand = self.cards
+        temp_hand = self.cards.copy()
+        best_three = self.find_best_three_of_a_kind_hand()        
     
-        best_three = self.find_best_three_of_a_kind_hand()
-        self.cards = self.cards.drop(best_three.index)
-        best_pair = self.find_best_pair_hand()
+        if best_three is not None:
+            self.cards.drop(best_three.index, inplace=True)
+            best_pair = self.find_best_pair_hand()
 
-        self.cards = temp_hand
-
-        return pd.concat([best_pair, best_three])
+            if best_pair is not None:
+                self.cards = temp_hand
+                return pd.concat([best_pair, best_three])
+        else:
+            self.cards = temp_hand
+            return
 
     def find_best_flush_hand(self):
-        pass
+        return self._find_best_n_hand(5, feat='suit')
 
     def find_best_straight_hand(self):
+        # TODO
         pass
 
     def find_best_straight_flush_hand(self):
+        # TODO
         pass
 
     def find_best_flush_house_hand(self):
+        # TODO
         pass
 
     def find_best_flush_five_hand(self):
+        # TODO
         pass
 
     def find_best_poker_hand(self):
+        # TODO
         pass
