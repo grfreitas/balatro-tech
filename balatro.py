@@ -85,23 +85,23 @@ class Hand():
         self.cards = pd.concat([self.cards, deck.cards[:n]])
         deck.cards = deck.cards[n:].copy()
 
-    def find_best_high_card_hand(self):
+    def find_best_high_card(self):
         max_chip_value = self.cards.base_chip_value.max()
         return self.cards[self.cards.base_chip_value == max_chip_value]
 
-    def find_best_pair_hand(self):
+    def find_best_pair(self):
         return self._find_best_n_hand(2)
 
-    def find_best_three_of_a_kind_hand(self):
+    def find_best_three_of_a_kind(self):
         return self._find_best_n_hand(3)
 
-    def find_best_four_of_a_kind_hand(self):
+    def find_best_four_of_a_kind(self):
         return self._find_best_n_hand(4)
 
-    def find_best_five_of_a_kind_hand(self):
+    def find_best_five_of_a_kind(self):
         return self._find_best_n_hand(5)
 
-    def find_best_two_pair_hand(self):
+    def find_best_two_pair(self):
         value_count_list = self.cards.value.value_counts()
 
         if (value_count_list >= 2).any():
@@ -123,13 +123,13 @@ class Hand():
         else:
             return
 
-    def find_best_full_house_hand(self):
+    def find_best_full_house(self):
         temp_hand = self.cards.copy()
-        best_three = self.find_best_three_of_a_kind_hand()        
+        best_three = self.find_best_three_of_a_kind()        
 
         if best_three is not None:
             self.cards.drop(best_three.index, inplace=True)
-            best_pair = self.find_best_pair_hand()
+            best_pair = self.find_best_pair()
 
             if best_pair is not None:
                 self.cards = temp_hand
@@ -138,25 +138,25 @@ class Hand():
             self.cards = temp_hand
             return
 
-    def find_best_flush_hand(self):
+    def find_best_flush(self):
         return self._find_best_n_hand(5, feat='suit')
 
-    def find_best_straight_hand(self):
+    def find_best_straight(self):
         # TODO
         pass
 
-    def find_best_straight_flush_hand(self):
+    def find_best_straight_flush(self):
         # TODO
         pass
 
-    def find_best_flush_house_hand(self):
+    def find_best_flush_house(self):
         temp_cards = self.cards
 
         totals = {}
         hands = {}
         for suit in SUITS:
             self.cards = self.cards[self.cards.suit == suit].copy()
-            best_full_house = self.find_best_full_house_hand()
+            best_full_house = self.find_best_full_house()
 
             if best_full_house is not None:
                 totals[suit] = best_full_house.base_chip_value.sum()
@@ -168,7 +168,7 @@ class Hand():
             best_suit = sorted(totals.items(), key=lambda x:x[1])[0][0]
             return hands[best_suit]
 
-    def find_best_flush_five_hand(self):
+    def find_best_flush_five(self):
         # TODO
         pass
 
