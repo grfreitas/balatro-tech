@@ -169,8 +169,24 @@ class Hand():
             return hands[best_suit]
 
     def find_best_flush_five(self):
-        # TODO
-        pass
+        temp_cards = self.cards
+
+        totals = {}
+        hands = {}
+        for suit in SUITS:
+            self.cards = self.cards[self.cards.suit == suit].copy()
+            best_five_of_a_kind = self.find_best_five_of_a_kind()
+
+            if best_five_of_a_kind is not None:
+                totals[suit] = best_five_of_a_kind.base_chip_value.sum()
+                hands[suit] = best_five_of_a_kind
+
+            self.cards = temp_cards
+
+        if len(totals) > 0:
+            return hands[sorted(totals.items(), key=lambda x:x[1])[0][0]]
+        else:
+            return
 
     def find_best_poker_hand(self):
         # TODO
