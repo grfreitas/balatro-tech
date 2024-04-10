@@ -17,8 +17,18 @@ CHIPS_PER_VALUE = {
     'J': 10,
     'Q': 10,
     'K': 10,
-    'A': 11,
-}
+    'A': 11}
+STRAIGHTS = [
+    {'A', '2', '3', '4', '5'},
+    {'2', '3', '4', '5', '6'},
+    {'3', '4', '5', '6', '7'},
+    {'4', '5', '6', '7', '8'},
+    {'5', '6', '7', '8', '9'},
+    {'6', '7', '8', '9', '10'},
+    {'7', '8', '9', '10', 'J'},
+    {'8', '9', '10', 'J', 'Q'},
+    {'9', '10', 'J', 'Q', 'K'},
+    {'10', 'J', 'Q', 'K', 'A'}]
 
 
 class Deck():
@@ -142,12 +152,43 @@ class Hand():
         return self._find_best_n_hand(5, feat='suit')
 
     def find_best_straight(self):
-        # TODO
-        pass
+        totals = {}
+        hands = {}
+
+        for straight in STRAIGHTS:
+            if straight.issubset(set(self.cards.value.values)):
+                straight_hand = self.cards[self.cards.value.isin(straight)].copy()
+                straight_hand = straight_hand.sort_values(
+                    'base_chip_value', ascending=False
+                ).groupby('value').head(1)
+    
+                totals[next(iter(straight))] = straight_hand.base_chip_value.sum()
+                hands[next(iter(straight))] = straight_hand
+
+        if len(totals) > 0:
+            return hands[sorted(totals.items(), key=lambda x:x[1])[0][0]]
+        else:
+            return
 
     def find_best_straight_flush(self):
-        # TODO
-        pass
+        temp_cards = self.cards
+
+        totals = {}
+        hands = {}
+        for suit in SUITS:
+            self.cards = self.cards[self.cards.suit == suit].copy()
+            best_straight = self.find_best_straight()
+
+            if best_straight is not None:
+                totals[suit] = best_straight.base_chip_value.sum()
+                hands[suit] = best_straight
+
+            self.cards = temp_cards
+
+        if len(totals) > 0:
+            return hands[sorted(totals.items(), key=lambda x:x[1])[0][0]]
+        else:
+            return
 
     def find_best_flush_house(self):
         temp_cards = self.cards
@@ -165,8 +206,9 @@ class Hand():
             self.cards = temp_cards
 
         if len(totals) > 0:
-            best_suit = sorted(totals.items(), key=lambda x:x[1])[0][0]
-            return hands[best_suit]
+            return hands[sorted(totals.items(), key=lambda x:x[1])[0][0]]
+        else:
+            return
 
     def find_best_flush_five(self):
         temp_cards = self.cards
