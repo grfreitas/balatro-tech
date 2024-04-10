@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 import numpy as np
 
@@ -29,6 +31,10 @@ STRAIGHTS = [
     {'8', '9', '10', 'J', 'Q'},
     {'9', '10', 'J', 'Q', 'K'},
     {'10', 'J', 'Q', 'K', 'A'}]
+
+f = open('../data/hand_level_increase.json')
+HAND_LEVEL_INCREASE = json.load(f)
+f.close()
 
 
 class Deck():
@@ -68,6 +74,20 @@ class Hand():
             "suit",
             "base_chip_value"
         ])
+        self.hand_level = {
+            'high_card': 1,
+            'pair': 1,
+            'three_of_a_kind': 1,
+            'four_of_a_kind': 1,
+            'five_of_a_kind': 1,
+            'two_pair': 1,
+            'full_house': 1,
+            'flush': 1,
+            'straight_flush': 1,
+            'straight': 1,
+            'flush_house': 1,
+            'flush_five': 1
+        }
         self.cards = self._empty_df
 
     def __repr__(self):
@@ -97,7 +117,7 @@ class Hand():
 
     def find_best_high_card(self):
         max_chip_value = self.cards.base_chip_value.max()
-        return self.cards[self.cards.base_chip_value == max_chip_value]
+        return self.cards[self.cards.base_chip_value == max_chip_value].head(1)
 
     def find_best_pair(self):
         return self._find_best_n_hand(2)
@@ -166,7 +186,7 @@ class Hand():
                 hands[next(iter(straight))] = straight_hand
 
         if len(totals) > 0:
-            return hands[sorted(totals.items(), key=lambda x:x[1])[0][0]]
+            return hands[sorted(totals.items(), key=lambda x:x[1])[-1][0]]
         else:
             return
 
@@ -186,7 +206,7 @@ class Hand():
             self.cards = temp_cards
 
         if len(totals) > 0:
-            return hands[sorted(totals.items(), key=lambda x:x[1])[0][0]]
+            return hands[sorted(totals.items(), key=lambda x:x[1])[-1][0]]
         else:
             return
 
@@ -206,7 +226,7 @@ class Hand():
             self.cards = temp_cards
 
         if len(totals) > 0:
-            return hands[sorted(totals.items(), key=lambda x:x[1])[0][0]]
+            return hands[sorted(totals.items(), key=lambda x:x[1])[-1][0]]
         else:
             return
 
@@ -231,5 +251,32 @@ class Hand():
             return
 
     def find_best_poker_hand(self):
-        # TODO
-        pass
+
+        hands = {
+            'high_card': self.find_best_high_card(),
+            'pair': self.find_best_pair(),
+            'three_of_a_kind': self.find_best_three_of_a_kind(),
+            'four_of_a_kind': self.find_best_four_of_a_kind(),
+            'five_of_a_kind': self.find_best_five_of_a_kind(),
+            'two_pair': self.find_best_two_pair(),
+            'full_house': self.find_best_full_house(),
+            'flush': self.find_best_flush(),
+            'straight_flush': self.find_best_straight_flush(),
+            'straight': self.find_best_straight(),
+            'flush_house': self.find_best_flush_house(),
+            'flush_five': self.find_best_flush_five()
+        }
+
+        totals = {}
+        for poker_hand in hands.keys():
+            if hands[poker_hand] is not None:
+                base = HAND_LEVEL_INCREASE[poker_hand]
+                totals[poker_hand] = (
+                    (self.hand_level[poker_hand] * int(base['chips']) + hands[poker_hand].base_chip_value.sum())
+                    * 
+                    (self.hand_level[poker_hand] * int(base['mult']))
+                )
+
+        best_poker_hand = sorted(totals.items(), key=lambda x:x[1])[-1][0]
+
+        return hands[best_poker_hand]
