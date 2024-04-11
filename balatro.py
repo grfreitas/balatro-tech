@@ -279,4 +279,4 @@ class Hand():
 
         best_poker_hand = sorted(totals.items(), key=lambda x:x[1])[-1][0]
 
-        return hands[best_poker_hand]
+        return best_poker_hand, totals[best_poker_hand]
